@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyGarden 🌱</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#a8c5e8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Firebase (for real-time sync between you and your friends) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- Ambient background blobs -->
+<div class="bg-blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+
+<!-- Header -->
+<header class="app-header glass">
+  <div class="header-left">
+    <span class="logo-icon">🌿</span>
+    <h1 class="app-title">StudyGarden</h1>
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" id="gardenBtn" title="Our Gardens">🌸</button>
+    <button class="icon-btn" id="settingsBtn" title="Manage Subjects">⚙️</button>
+    <button class="add-btn" id="addAssignmentBtn">+ New Task</button>
+  </div>
+</header>
+
+<!-- Tabs -->
+<nav class="tabs-nav glass">
+  <button class="tab-btn active" data-tab="all">All</button>
+  <div class="tabs-scroll" id="subjectTabs"></div>
+  <span class="urgent-badge" id="urgentCount" style="display:none"></span>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+  <div class="assignments-grid" id="assignmentsGrid"></div>
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div class="empty-emoji">🌱</div>
+    <p>No assignments yet!<br><span>Add one to start your garden journey.</span></p>
+  </div>
+</main>
+
+<!-- ===== ADD / EDIT MODAL ===== -->
+<div class="modal-overlay" id="assignmentModal" style="display:none">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2 id="modalTitle">New Assignment 🌱</h2>
+      <button class="close-btn" id="closeModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Subject -->
+      <div class="field-group">
+        <label>Subject</label>
+        <select id="subjectSelect" class="glass-input"></select>
+      </div>
+      <!-- Teacher -->
+      <div class="field-group">
+        <label>Teacher</label>
+        <input type="text" id="teacherInput" class="glass-input" placeholder="e.g. Mr. Sharma" />
+      </div>
+      <!-- Description -->
+      <div class="field-group">
+        <label>Assignment Description</label>
+        <textarea id="descInput" class="glass-input" rows="3" placeholder="What needs to be done?"></textarea>
+      </div>
+      <!-- Deadline -->
+      <div class="field-group">
+        <label>Deadline</label>
+        <div class="deadline-options">
+          <button class="deadline-opt-btn active" id="deadlineDateBtn">📅 Choose Date</button>
+          <button class="deadline-opt-btn" id="deadlineNextBtn">📖 Next Class</button>
+        </div>
+        <input type="date" id="deadlineDateInput" class="glass-input" style="margin-top:8px" />
+      </div>
+      <!-- Files -->
+      <div class="field-group">
+        <label>Attachments <span class="hint">(images, PDF, PPT)</span></label>
+        <div class="file-drop-zone" id="fileDropZone">
+          <span>📎 Drop files here or click to upload</span>
+          <input type="file" id="fileInput" multiple accept="image/*,.pdf,.ppt,.pptx" style="display:none" />
+        </div>
+        <div class="file-list" id="fileList"></div>
+      </div>
+      <!-- Checklist -->
+      <div class="field-group">
+        <label>Team Checklist</label>
+        <div class="checklist-grid" id="modalChecklist"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" id="cancelModal">Cancel</button>
+      <button class="save-btn" id="saveAssignment">🌿 Save Assignment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GARDEN MODAL ===== -->
+<div class="modal-overlay" id="gardenModal" style="display:none">
+  <div class="modal glass garden-modal">
+    <div class="modal-header">
+      <h2>🌸 Our Gardens</h2>
+      <button class="close-btn" id="closeGarden">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="garden-desc">Each task you complete plants a new flower! 🌻</p>
+      <div class="gardens-grid" id="gardensGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SUBJECTS SETTINGS MODAL ===== -->
+<div class="modal-overlay" id="settingsModal" style="display:none">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>⚙️ Settings</h2>
+      <button class="close-btn" id="closeSettings">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Subjects</label>
+        <div class="subjects-list" id="subjectsList"></div>
+        <div class="add-subject-row">
+          <input type="text" id="newSubjectInput" class="glass-input" placeholder="New subject name..." />
+          <button class="save-btn small" id="addSubjectBtn">Add</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>This Device Belongs To</label>
+        <div class="checklist-grid" id="whoAmISettingsGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== CONFETTI CANVAS ===== -->
+<canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999"></canvas>
+
+<!-- ===== WHO-AM-I MODAL (first launch) ===== -->
+<div class="modal-overlay" id="whoAmIModal" style="display:none">
+  <div class="modal glass" style="max-width:400px">
+    <div class="modal-header">
+      <h2>👋 Who are you?</h2>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:14px">This helps us know who's checking off tasks on this device. You can change it later in settings.</p>
+      <div class="checklist-grid" id="whoAmIGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SYNC STATUS BADGE ===== -->
+<div id="syncStatus" class="sync-status" title="Sync status">🔄 Connecting...</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
