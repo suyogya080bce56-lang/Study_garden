@@ -14,12 +14,12 @@
 // =====================================================================
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBKz1nbXeoq6O_v2CT2q5qJ8tmB4OBbOok",
+  authDomain: "study-84c31.firebaseapp.com",
+  projectId: "study-84c31",
+  storageBucket: "study-84c31.firebasestorage.app",
+  messagingSenderId: "717904726754",
+  appId: "1:717904726754:web:55065564bde462b1862cbb"
 };
 
 // A shared "room" name so all of you read/write the same documents.
